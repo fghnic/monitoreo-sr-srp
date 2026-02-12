@@ -1,10 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Monitoreo SR-SRP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 500px;
+      margin: auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    button {
+      background: #7A003C;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Proyecto activo</h1>
+
+<div class="card">
+  <h2>Monitoreo SR-SRP</h2>
+
+  <label>Célula</label>
+  <select id="celulaSelect"></select>
+
+  <label>Corte</label>
+  <select id="corteSelect">
+    <option value="09:00">09:00</option>
+    <option value="10:00">10:00</option>
+    <option value="12:00">12:00</option>
+    <option value="14:00">14:00</option>
+  </select>
+
+  <button onclick="guardar()">Guardar</button>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://qopybmzpxgwnzwzkmepw.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvcHlibXpweGd3bnp3emttZXB3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4NjI0NTMsImV4cCI6MjA4NjQzODQ1M30.rZF7ooFxLyzyAcWvK-tXuNXPlDU-WJHjCkRVgVKIxrc";
+
+  const { createClient } = supabase;
+  const client = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  async function cargarCelulas() {
+    const { data, error } = await client
+      .from("celulas")
+      .select("*")
+      .eq("activa", true);
+
+    if (error) {
+      console.error(error);
+      alert("Error cargando células");
+      return;
+    }
+
+    const select = document.getElementById("celulaSelect");
+    select.innerHTML = "";
+
+    data.forEach(c => {
+      const option = document.createElement("option");
+      option.value = c.id;
+      option.textContent = c.nombre;
+      select.appendChild(option);
+    });
+  }
+
+  async function guardar() {
+    const celula_id = document.getElementById("celulaSelect").value;
+    const corte = document.getElementById("corteSelect").value;
+
+    const { error } = await client
+      .from("reportes")
+      .insert([
+        {
+          celula_id: celula_id,
+          corte: corte,
+          fecha: new Date().toISOString()
+        }
+      ]);
+
+    if (error) {
+      console.error(error);
+      alert("Error al guardar");
+    } else {
+      alert("Guardado correctamente");
+    }
+  }
+
+  cargarCelulas();
+</script>
+
 </body>
 </html>
